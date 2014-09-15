@@ -82,7 +82,7 @@ class CrossWord() {
     if (direction == CellState.VERTICAL_DIRECTION) {
       if (startI - 1 >= 0) {
         if (!field(startI - 1)(startJ).isAvaliabile()) return false
-        if (startJ - 1 >= 0 && field(startI - 1)(startJ - 1).isAvaliabile()) return false
+        if (startJ - 1 >= 0 && !field(startI - 1)(startJ - 1).isAvaliabile()) return false
         if (startJ + 1 <= field.length && !field(startI - 1)(startJ + 1).isAvaliabile()) return false
       }
       if (startI + wordLength <= field.length) {
@@ -188,14 +188,5 @@ class CrossWord() {
       }
     }
     result
-  }
-}
-
-
-object Cross {
-  def main(s: Array[String]): Unit = {
-    val crossWord: CrossWord = new CrossWord()
-    crossWord.generateCrossWord(s.toList, 16)
-
   }
 }

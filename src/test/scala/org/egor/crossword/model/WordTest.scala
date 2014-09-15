@@ -1,6 +1,6 @@
 package org.egor.crossword.model
 
-import org.scalatest.{FunSuite, Ignore}
+import org.scalatest.FunSuite
 
 class WordTest extends FunSuite {
 
@@ -63,7 +63,6 @@ class WordTest extends FunSuite {
 
     val f: Array[Array[Cell]] = word.setWord(newField, "dark")
     val cell: Cell = f(1)(1)
-
     assert(cell.char == "d")
     assert(f(4)(1).char == "k")
   }
@@ -95,7 +94,6 @@ class WordTest extends FunSuite {
     val f: Array[Array[Cell]] = crossWord.setWord(newField, "imaginarium")
     crossWord.setWord(f, "programmnig")
     crossWord.setWord(f, "story")
-     printArray(f)
   }
 
   def printArray(newField: Array[Array[Cell]]): Unit = {
