@@ -88,6 +88,16 @@ class WordTest extends FunSuite {
     printArray(newField)
   }
 
+  test("issue with placement word"){
+    val crossWord: CrossWord = new CrossWord
+    val field: Array[Array[Cell]] = crossWord.createField(16)
+    val newField: Array[Array[Cell]] = crossWord.setTheFirstWord("towerdefence", field)
+    val f: Array[Array[Cell]] = crossWord.setWord(newField, "imaginarium")
+    crossWord.setWord(f, "programmnig")
+    crossWord.setWord(f, "story")
+     printArray(f)
+  }
+
   def printArray(newField: Array[Array[Cell]]): Unit = {
     for (i <- 0 until newField.length) {
       for (j <- 0 until newField.length) {

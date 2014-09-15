@@ -52,30 +52,57 @@ class CrossWord() {
     setStartAndFinish(f, startI, startJ, wordDirection, word.length)
   }
 
-  def setStartAndFinish(f: Array[Array[Cell]], i: Int, j: Int, direction: Int, wordLength: Int): Unit = {
+  private def setStartAndFinish(f: Array[Array[Cell]], startI: Int, startJ: Int, direction: Int, wordLength: Int): Unit = {
     if (direction == CellState.VERTICAL_DIRECTION) {
-      if (i - 1 >= 0) {
-        if (f(i - 1)(j).avaliability != CellState.WORD) f(i - 1)(j).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (j - 1 >= 0) f(i - 1)(j - 1).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (j + 1 <= f.length) f(i - 1)(j + 1).avaliability = CellState.FORBIDDEN_DIRECTION
+      if (startI - 1 >= 0) {
+        f(startI - 1)(startJ).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startJ - 1 >= 0) f(startI - 1)(startJ - 1).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startJ + 1 <= f.length) f(startI - 1)(startJ + 1).avaliability = CellState.FORBIDDEN_DIRECTION
       }
-      if (i + wordLength <= f.length) {
-        f(i + wordLength)(j).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (j - 1 >= 0) f(i + wordLength)(j - 1).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (j + 1 <= f.length) f(i + wordLength)(j + 1).avaliability = CellState.FORBIDDEN_DIRECTION
+      if (startI + wordLength <= f.length) {
+        f(startI + wordLength)(startJ).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startJ - 1 >= 0) f(startI + wordLength)(startJ - 1).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startJ + 1 <= f.length) f(startI + wordLength)(startJ + 1).avaliability = CellState.FORBIDDEN_DIRECTION
       }
     } else {
-      if (j - 1 >= 0) {
-        f(i)(j - 1).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (i - 1 >= 0) f(i - 1)(j - 1).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (i + 1 <= f.length) f(i + 1)(j - 1).avaliability = CellState.FORBIDDEN_DIRECTION
+      if (startJ - 1 >= 0) {
+        f(startI)(startJ - 1).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startI - 1 >= 0) f(startI - 1)(startJ - 1).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startI + 1 <= f.length) f(startI + 1)(startJ - 1).avaliability = CellState.FORBIDDEN_DIRECTION
       }
-      if (j + wordLength < f.length) {
-        f(i)(j + wordLength).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (i - 1 >= 0) f(i - 1)(j + wordLength).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (i + 1 <= f.length) f(i + 1)(j + wordLength).avaliability = CellState.FORBIDDEN_DIRECTION
+      if (startJ + wordLength < f.length) {
+        f(startI)(startJ + wordLength).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startI - 1 >= 0) f(startI - 1)(startJ + wordLength).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startI + 1 <= f.length) f(startI + 1)(startJ + wordLength).avaliability = CellState.FORBIDDEN_DIRECTION
       }
     }
+  }
+
+  private def checkStarnAndFinishForAvalaibility(field: Array[Array[Cell]], startI: Int, startJ: Int, direction: Int, wordLength: Int): Boolean = {
+    if (direction == CellState.VERTICAL_DIRECTION) {
+      if (startI - 1 >= 0) {
+        if (!field(startI - 1)(startJ).isAvaliabile()) return false
+        if (startJ - 1 >= 0 && field(startI - 1)(startJ - 1).isAvaliabile()) return false
+        if (startJ + 1 <= field.length && !field(startI - 1)(startJ + 1).isAvaliabile()) return false
+      }
+      if (startI + wordLength <= field.length) {
+        if (field(startI + wordLength)(startJ).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI + wordLength)(startJ).avaliability == CellState.WORD) return false
+        if (startJ - 1 >= 0 && (field(startI + wordLength)(startJ - 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI + wordLength)(startJ - 1).avaliability == CellState.WORD)) return false
+        if (startJ + 1 <= field.length && (field(startI + wordLength)(startJ + 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI + wordLength)(startJ + 1).avaliability == CellState.WORD)) return false
+      }
+    } else {
+      if (startJ - 1 >= 0) {
+        if( field(startI)(startJ - 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI)(startJ - 1).avaliability == CellState.WORD) return false
+        if (startI - 1 >= 0 && (field(startI - 1)(startJ - 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI - 1)(startJ - 1).avaliability == CellState.WORD)) return false
+        if (startI + 1 <= field.length && (field(startI + 1)(startJ - 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI + 1)(startJ - 1).avaliability == CellState.WORD)) return false
+      }
+      if (startJ + wordLength < field.length) {
+        if (field(startI)(startJ + wordLength).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI)(startJ + wordLength).avaliability == CellState.WORD) return  false
+        if (startI - 1 >= 0 && !field(startI - 1)(startJ + wordLength).isAvaliabile()) return false
+        if (startI + 1 <= field.length && !field(startI + 1)(startJ + wordLength).isAvaliabile()) return false
+      }
+    }
+    true
   }
 
   def setNeighbours(f: Array[Array[Cell]], i: Int, j: Int, direction: Int): Unit = {
@@ -147,6 +174,7 @@ class CrossWord() {
             result = false
           }
         }
+        result = result && checkStarnAndFinishForAvalaibility(f,rowOrColumn, startPos, wordDirection, word.length)
       } else {
         for (k <- 0 until word.length) {
           val cell: Cell = f(k + startPos)(rowOrColumn)
@@ -156,6 +184,7 @@ class CrossWord() {
             result = false
           }
         }
+        result = result && checkStarnAndFinishForAvalaibility(f, startPos, rowOrColumn, wordDirection, word.length)
       }
     }
     result

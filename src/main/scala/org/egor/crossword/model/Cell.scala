@@ -14,6 +14,10 @@ class Cell( state: Int, c:String, wd:Int) {
 //    else s"|$avaliability|"
     else "|-|"
   }
+
+  def isAvaliabile():Boolean={
+    avaliability != CellState.FORBIDDEN_DIRECTION && avaliability != CellState.WORD
+  }
 }
 
 
