@@ -7,8 +7,8 @@ class WordTest extends FunSuite {
   test("set First word") {
     val word: CrossWord = new CrossWord()
     val filed: Array[Array[Cell]] = word.createField(6)
-    val newField: Array[Array[Cell]] = word.setTheFirstWord("abrd", filed)
-
+    val variations: List[Array[Array[Cell]]] = word.setTheFirstWord("abrd", filed)
+    val newField = variations(0)
     val cell: Cell = newField(2)(1)
     assert(CellState.WORD == cell.avaliability)
     assert("a" == cell.char)
@@ -17,26 +17,35 @@ class WordTest extends FunSuite {
     val cell1: Cell = newField(2)(4)
     assert(CellState.WORD == cell1.avaliability)
     assert("d" == cell1.char)
+
+    val second = variations(1)
+    assert(CellState.WORD == second(1)(2).avaliability)
+    assert("a" == second(1)(2).char)
+    assert(CellState.VERTICAL_DIRECTION == second(1)(2).wordDirection)
+
   }
 
   test("set neighbours avaliability") {
 
     val word: CrossWord = new CrossWord()
     val filed: Array[Array[Cell]] = word.createField(6)
-    val newField: Array[Array[Cell]] = word.setTheFirstWord("abrd", filed)
-
+    val variations: List[Array[Array[Cell]]] = word.setTheFirstWord("abrd", filed)
+    val newField: Array[Array[Cell]] = variations(0)
+printArray(variations(0))
+printArray(variations(1))
     var cell: Cell = newField(1)(1)
     assert(cell.avaliability == CellState.VERTICAL_DIRECTION)
 
     cell = newField(3)(4)
     assert(cell.avaliability == CellState.VERTICAL_DIRECTION)
+
   }
 
   test("set start and finish") {
 
     val word: CrossWord = new CrossWord()
     val filed: Array[Array[Cell]] = word.createField(6)
-    val newField: Array[Array[Cell]] = word.setTheFirstWord("abrd", filed)
+    val newField: Array[Array[Cell]] = word.setTheFirstWord("abrd", filed)(0)
 
     var cell: Cell = newField(2)(0)
     assert(cell.avaliability == CellState.FORBIDDEN_DIRECTION)
@@ -49,7 +58,7 @@ class WordTest extends FunSuite {
 
     val cross: CrossWord = new CrossWord()
     val filed: Array[Array[Cell]] = cross.createField(6)
-    val newField: Array[Array[Cell]] = cross.setTheFirstWord("abrd", filed)
+    val newField: Array[Array[Cell]] = cross.setTheFirstWord("abrd", filed)(0)
 
     assert(cross.checkAvaliability(newField, 1, 1, "dark", CellState.VERTICAL_DIRECTION))
     assert(!cross.checkAvaliability(newField, 1, 2, "dark", CellState.VERTICAL_DIRECTION))
@@ -59,9 +68,9 @@ class WordTest extends FunSuite {
 
     val word: CrossWord = new CrossWord()
     val filed: Array[Array[Cell]] = word.createField(6)
-    val newField: Array[Array[Cell]] = word.setTheFirstWord("abrd", filed)
+    val newField: Array[Array[Cell]] = word.setTheFirstWord("abrd", filed)(0)
 
-    val f: Array[Array[Cell]] = word.setWord(newField, "dark")
+    val f: Array[Array[Cell]] = word.setWord(newField, "dark")(0)
     val cell: Cell = f(1)(1)
     assert(cell.char == "d")
     assert(f(4)(1).char == "k")
@@ -70,11 +79,11 @@ class WordTest extends FunSuite {
   test("setting more words"){
     val word: CrossWord = new CrossWord()
     val filed: Array[Array[Cell]] = word.createField(16)
-    val newField: Array[Array[Cell]] = word.setTheFirstWord("towerdefence", filed)
+    val newField: Array[Array[Cell]] = word.setTheFirstWord("towerdefence", filed)(0)
     val firstCell: Cell = newField(7)(2)
     assert(firstCell.char == "t")
 
-    val f: Array[Array[Cell]] = word.setWord(newField, "imaginarium")
+    val f: Array[Array[Cell]] = word.setWord(newField, "imaginarium")(0)
     assert(f(0)(6).char == "i")
 
     word.setWord(f, "interesting")
@@ -87,14 +96,7 @@ class WordTest extends FunSuite {
     printArray(newField)
   }
 
-  test("issue with placement word"){
-    val crossWord: CrossWord = new CrossWord
-    val field: Array[Array[Cell]] = crossWord.createField(16)
-    val newField: Array[Array[Cell]] = crossWord.setTheFirstWord("towerdefence", field)
-    val f: Array[Array[Cell]] = crossWord.setWord(newField, "imaginarium")
-    crossWord.setWord(f, "programmnig")
-    crossWord.setWord(f, "story")
-  }
+
 
   def printArray(newField: Array[Array[Cell]]): Unit = {
     for (i <- 0 until newField.length) {

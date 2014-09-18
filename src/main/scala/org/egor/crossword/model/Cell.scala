@@ -1,6 +1,6 @@
 package org.egor.crossword.model
 
-class Cell( state: Int, c:String, wd:Int) {
+class Cell ( state: Int, c:String, wd:Int) extends Cloneable {
   def this(state:Int) = this(state, "", -1)
   def this() = this(CellState.ANY_DIRECTION)
 
@@ -18,6 +18,8 @@ class Cell( state: Int, c:String, wd:Int) {
   def isAvaliabile():Boolean={
     avaliability != CellState.FORBIDDEN_DIRECTION && avaliability != CellState.WORD
   }
+
+  override def clone(): Cell = new Cell(avaliability, char, wordDirection)
 }
 
 

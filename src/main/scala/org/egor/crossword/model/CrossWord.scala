@@ -2,7 +2,7 @@ package org.egor.crossword.model
 
 class CrossWord() {
 
-  val variants: List[Array[Array[Cell]]] = Nil
+  var variants: List[Array[Array[Cell]]] = Nil
 
   def createField(size: Int) = {
     Array.fill(size, size)(new Cell())
@@ -11,8 +11,19 @@ class CrossWord() {
   def generateCrossWord(words: List[String], dimension: Int): Unit = {
     val sortedWords: List[String] = words.filter(x => x.length <= dimension).sortBy(x => -x.length)
     val field: Array[Array[Cell]] = createField(dimension)
-    setTheFirstWord(sortedWords.head, field)
-    sortedWords.tail.foreach(setWord(field, _))
+    variants = setTheFirstWord(sortedWords.head, field) ::: Nil
+    
+    for(i  <- 1 until sortedWords.length){
+    val word: String = sortedWords(i)
+      var newVariants :List[Array[Array[Cell]]]= Nil
+      for(k<-0 until variants.length){
+        val crossField: Array[Array[Cell]] = variants(k)
+        val v: List[Array[Array[Cell]]] = setWord(crossField, word)
+        newVariants =  v ::: newVariants
+      }
+      variants = newVariants
+    }
+    variants.foreach(printArray(_))
     printArray(field)
   }
 
@@ -23,14 +34,22 @@ class CrossWord() {
       }
       println()
     }
+    println()
+    println()
+    println()
   }
 
   def setTheFirstWord(w: String, f: Array[Array[Cell]]) = {
     val startPos: Int = (f.length - w.length) / 2
     val vertPos: Int = f.length / 2 - 1
+    val clone: Array[Array[Cell]] = cloneArray(f)
     placeTheWord(f, vertPos, startPos, w, CellState.HORIZONTAL_DIRECTION)
+    placeTheWord(clone, startPos, vertPos, w, CellState.VERTICAL_DIRECTION)
+    List(f, clone)
+  }
 
-    f
+  def cloneArray(f: Array[Array[Cell]])={
+    f.map(_.map(_.clone()))
   }
 
   def placeTheWord(f: Array[Array[Cell]], startI: Int, startJ: Int, word: String, wordDirection: Int) = {
@@ -50,6 +69,7 @@ class CrossWord() {
       }
     }
     setStartAndFinish(f, startI, startJ, wordDirection, word.length)
+    f
   }
 
   private def setStartAndFinish(f: Array[Array[Cell]], startI: Int, startJ: Int, direction: Int, wordLength: Int): Unit = {
@@ -134,7 +154,8 @@ class CrossWord() {
     }
   }
 
-  def setWord(f: Array[Array[Cell]], word: String): Array[Array[Cell]] = {
+  def setWord(f: Array[Array[Cell]], word: String): List[Array[Array[Cell]]] = {
+    var result:List[Array[Array[Cell]]] = Nil
     for (i <- 0 until f.length) {
       for (j <- 0 until f.length) {
         val cell: Cell = f(i)(j)
@@ -144,21 +165,21 @@ class CrossWord() {
             if (cell.wordDirection == CellState.HORIZONTAL_DIRECTION) {
               val startPos: Int = i - index
               if (checkAvaliability(f, startPos, j, word, CellState.VERTICAL_DIRECTION)) {
-                placeTheWord(f, startPos, j, word, CellState.VERTICAL_DIRECTION)
-                return f
+                val clone = placeTheWord(cloneArray(f), startPos, j, word, CellState.VERTICAL_DIRECTION)
+                result = List(clone) ::: result
               }
             } else {
               val startPos: Int = j - index
               if (checkAvaliability(f, startPos, i, word, CellState.HORIZONTAL_DIRECTION)) {
-                placeTheWord(f, i, startPos, word, CellState.HORIZONTAL_DIRECTION)
-                return f
+                val clone: Array[Array[Cell]] = placeTheWord(cloneArray(f), i, startPos, word, CellState.HORIZONTAL_DIRECTION)
+                result = List(clone) ::: result
               }
             }
           }
         }
       }
     }
-    f
+    result
   }
 
 
