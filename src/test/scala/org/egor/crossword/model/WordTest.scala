@@ -35,15 +35,15 @@ class WordTest extends FunSuite {
       println()
     }
   }
-  /*
+
     test("set neighbours avaliability") {
 
       val word: CrossWord = new CrossWord()
       val filed: Array[Array[Cell]] = word.createField(6)
-      val variations: List[Array[Array[Cell]]] = word.setTheFirstWord("abrd", filed)
-      val newField: Array[Array[Cell]] = variations(0)
-  printArray(variations(0))
-  printArray(variations(1))
+      val v:Variant = new Variant(filed, 0)
+      val variations = word.setTheFirstWord("abrd", v)
+      val newField = variations(0).wordField
+
       var cell: Cell = newField(1)(1)
       assert(cell.avaliability == CellState.VERTICAL_DIRECTION)
 
@@ -56,7 +56,8 @@ class WordTest extends FunSuite {
 
       val word: CrossWord = new CrossWord()
       val filed: Array[Array[Cell]] = word.createField(6)
-      val newField: Array[Array[Cell]] = word.setTheFirstWord("abrd", filed)(0)
+      val v:Variant = new Variant(filed, 0)
+      val newField = word.setTheFirstWord("abrd", v)(0).wordField
 
       var cell: Cell = newField(2)(0)
       assert(cell.avaliability == CellState.FORBIDDEN_DIRECTION)
@@ -69,53 +70,46 @@ class WordTest extends FunSuite {
 
       val cross: CrossWord = new CrossWord()
       val filed: Array[Array[Cell]] = cross.createField(6)
-      val newField: Array[Array[Cell]] = cross.setTheFirstWord("abrd", filed)(0)
+      val v:Variant = new Variant(filed, 0)
+
+      val newField = cross.setTheFirstWord("abrd", v)(0).wordField
 
       assert(cross.checkAvaliability(newField, 1, 1, "dark", CellState.VERTICAL_DIRECTION))
       assert(!cross.checkAvaliability(newField, 1, 2, "dark", CellState.VERTICAL_DIRECTION))
     }
 
-    test("set second Word") {
+
+  ignore("set second Word") {
 
       val word: CrossWord = new CrossWord()
       val filed: Array[Array[Cell]] = word.createField(6)
-      val newField: Array[Array[Cell]] = word.setTheFirstWord("abrd", filed)(0)
+      val v:Variant = new Variant(filed, 0)
+      val newField: Array[Array[Cell]] = word.setTheFirstWord("abrd", v)(0).wordField
 
-      val f: Array[Array[Cell]] = word.setWord(newField, "dark")(0)
+      val f = word.setWord(v, "dark")(0).wordField
       val cell: Cell = f(1)(1)
       assert(cell.char == "d")
       assert(f(4)(1).char == "k")
     }
 
-    test("setting more words"){
+
+  ignore("setting more words"){
       val word: CrossWord = new CrossWord()
       val filed: Array[Array[Cell]] = word.createField(16)
-      val newField: Array[Array[Cell]] = word.setTheFirstWord("towerdefence", filed)(0)
+      val v:Variant = new Variant(filed, 0)
+      val newField: Array[Array[Cell]] = word.setTheFirstWord("abrd", v)(0).wordField
       val firstCell: Cell = newField(7)(2)
       assert(firstCell.char == "t")
 
-      val f: Array[Array[Cell]] = word.setWord(newField, "imaginarium")(0)
+      val variation: Variant = word.setWord(v, "imaginarium")(0)
+      val f: Array[Array[Cell]] = variation.wordField
       assert(f(0)(6).char == "i")
 
-      word.setWord(f, "interesting")
+      word.setWord(variation, "interesting")
       assert(f(5)(5).char == "i")
 
-      word.setWord(f, "teleport")
+      word.setWord(variation, "teleport")
       assert(f(5)(5).char == "i")
-
-      word.setWord(f, "story")
-      printArray(newField)
     }
 
-
-
-    def printArray(newField: Array[Array[Cell]]): Unit = {
-      for (i <- 0 until newField.length) {
-        for (j <- 0 until newField.length) {
-          print(newField(i)(j) + " ")
-        }
-        println()
-      }
-    }
-  */
 }
