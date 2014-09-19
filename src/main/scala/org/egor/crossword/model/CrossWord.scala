@@ -2,7 +2,7 @@ package org.egor.crossword.model
 
 class CrossWord() {
 
-  var variants: List[Array[Array[Cell]]] = Nil
+  var variants: List[Variant] = Nil
 
   def createField(size: Int) = {
     Array.fill(size, size)(new Cell())
@@ -11,26 +11,28 @@ class CrossWord() {
   def generateCrossWord(words: List[String], dimension: Int): Unit = {
     val sortedWords: List[String] = words.filter(x => x.length <= dimension).sortBy(x => -x.length)
     val field: Array[Array[Cell]] = createField(dimension)
-    variants = setTheFirstWord(sortedWords.head, field) ::: Nil
+    val v:Variant = new Variant(field, 0)
+    variants = setTheFirstWord(sortedWords.head, v) ::: Nil
     
     for(i  <- 1 until sortedWords.length){
     val word: String = sortedWords(i)
-      var newVariants :List[Array[Array[Cell]]]= Nil
+      var newVariants :List[Variant]= Nil
       for(k<-0 until variants.length){
-        val crossField: Array[Array[Cell]] = variants(k)
-        val v: List[Array[Array[Cell]]] = setWord(crossField, word)
+        val crossField: Variant = variants(k)
+        val v: List[Variant] = setWord(crossField, word)
         newVariants =  v ::: newVariants
       }
       variants = newVariants
     }
-    variants.foreach(printArray(_))
-    printArray(field)
+    variants.sortBy(_.wordCount).foreach(printArray)
   }
 
-  private def printArray(newField: Array[Array[Cell]]): Unit = {
+  private def printArray(newField: Variant): Unit = {
+    println("<==============" + newField.wordCount + "==============>")
+
     for (i <- 0 until newField.length) {
       for (j <- 0 until newField.length) {
-        print(newField(i)(j) + " ")
+        print(newField.wordField(i)(j) + " ")
       }
       println()
     }
@@ -39,61 +41,64 @@ class CrossWord() {
     println()
   }
 
-  def setTheFirstWord(w: String, f: Array[Array[Cell]]) = {
-    val startPos: Int = (f.length - w.length) / 2
-    val vertPos: Int = f.length / 2 - 1
-    val clone: Array[Array[Cell]] = cloneArray(f)
-    placeTheWord(f, vertPos, startPos, w, CellState.HORIZONTAL_DIRECTION)
-    placeTheWord(clone, startPos, vertPos, w, CellState.VERTICAL_DIRECTION)
-    List(f, clone)
+  def setTheFirstWord(w: String, v: Variant) = {
+    val startPos: Int = (v.wordField.length - w.length) / 2
+    val vertPos: Int = v.wordField.length / 2 - 1
+
+    val v2: Variant = v.clone()
+    placeTheWord(v, vertPos, startPos, w, CellState.HORIZONTAL_DIRECTION)
+    placeTheWord(v2, startPos, vertPos, w, CellState.VERTICAL_DIRECTION)
+    List(v, v2)
   }
 
   def cloneArray(f: Array[Array[Cell]])={
     f.map(_.map(_.clone()))
   }
 
-  def placeTheWord(f: Array[Array[Cell]], startI: Int, startJ: Int, word: String, wordDirection: Int) = {
+  def placeTheWord(variant:Variant, startI: Int, startJ: Int, word: String, wordDirection: Int) = {
     if (CellState.HORIZONTAL_DIRECTION == wordDirection) {
       var index = 0
       for (x <- startJ until startJ + word.length) {
-        f(startI)(x) = new Cell(CellState.WORD, word(index).toString, wordDirection)
-        setNeighbours(f, startI, x, wordDirection)
+        variant.wordField(startI)(x) = new Cell(CellState.WORD, word(index).toString, wordDirection)
+        setNeighbours(variant, startI, x, wordDirection)
         index = index + 1
       }
     } else {
       var index = 0
       for (x <- startI until startI + word.length) {
-        f(x)(startJ) = new Cell(CellState.WORD, word(index).toString, wordDirection)
-        setNeighbours(f, x, startJ, wordDirection)
+        variant.wordField(x)(startJ) = new Cell(CellState.WORD, word(index).toString, wordDirection)
+        setNeighbours(variant, x, startJ, wordDirection)
         index = index + 1
       }
     }
-    setStartAndFinish(f, startI, startJ, wordDirection, word.length)
-    f
+    setStartAndFinish(variant, startI, startJ, wordDirection, word.length)
+    variant.wordPlaced()
+    variant
   }
 
-  private def setStartAndFinish(f: Array[Array[Cell]], startI: Int, startJ: Int, direction: Int, wordLength: Int): Unit = {
+  private def setStartAndFinish(variant:Variant, startI: Int, startJ: Int, direction: Int, wordLength: Int): Unit = {
+    val f = variant.wordField
     if (direction == CellState.VERTICAL_DIRECTION) {
       if (startI - 1 >= 0) {
         f(startI - 1)(startJ).avaliability = CellState.FORBIDDEN_DIRECTION
         if (startJ - 1 >= 0) f(startI - 1)(startJ - 1).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (startJ + 1 <= f.length) f(startI - 1)(startJ + 1).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startJ + 1 < f.length) f(startI - 1)(startJ + 1).avaliability = CellState.FORBIDDEN_DIRECTION
       }
-      if (startI + wordLength <= f.length) {
+      if (startI + wordLength < f.length) {
         f(startI + wordLength)(startJ).avaliability = CellState.FORBIDDEN_DIRECTION
         if (startJ - 1 >= 0) f(startI + wordLength)(startJ - 1).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (startJ + 1 <= f.length) f(startI + wordLength)(startJ + 1).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startJ + 1 < f.length) f(startI + wordLength)(startJ + 1).avaliability = CellState.FORBIDDEN_DIRECTION
       }
     } else {
       if (startJ - 1 >= 0) {
         f(startI)(startJ - 1).avaliability = CellState.FORBIDDEN_DIRECTION
         if (startI - 1 >= 0) f(startI - 1)(startJ - 1).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (startI + 1 <= f.length) f(startI + 1)(startJ - 1).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startI + 1 < f.length) f(startI + 1)(startJ - 1).avaliability = CellState.FORBIDDEN_DIRECTION
       }
       if (startJ + wordLength < f.length) {
         f(startI)(startJ + wordLength).avaliability = CellState.FORBIDDEN_DIRECTION
         if (startI - 1 >= 0) f(startI - 1)(startJ + wordLength).avaliability = CellState.FORBIDDEN_DIRECTION
-        if (startI + 1 <= f.length) f(startI + 1)(startJ + wordLength).avaliability = CellState.FORBIDDEN_DIRECTION
+        if (startI + 1 < f.length) f(startI + 1)(startJ + wordLength).avaliability = CellState.FORBIDDEN_DIRECTION
       }
     }
   }
@@ -103,31 +108,31 @@ class CrossWord() {
       if (startI - 1 >= 0) {
         if (!field(startI - 1)(startJ).isAvaliabile()) return false
         if (startJ - 1 >= 0 && !field(startI - 1)(startJ - 1).isAvaliabile()) return false
-        if (startJ + 1 <= field.length && !field(startI - 1)(startJ + 1).isAvaliabile()) return false
+        if (startJ + 1 < field.length && !field(startI - 1)(startJ + 1).isAvaliabile()) return false
       }
-      if (startI + wordLength <= field.length) {
+      if (startI + wordLength < field.length) {
         if (field(startI + wordLength)(startJ).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI + wordLength)(startJ).avaliability == CellState.WORD) return false
         if (startJ - 1 >= 0 && (field(startI + wordLength)(startJ - 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI + wordLength)(startJ - 1).avaliability == CellState.WORD)) return false
-        if (startJ + 1 <= field.length && (field(startI + wordLength)(startJ + 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI + wordLength)(startJ + 1).avaliability == CellState.WORD)) return false
+        if (startJ + 1 < field.length && (field(startI + wordLength)(startJ + 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI + wordLength)(startJ + 1).avaliability == CellState.WORD)) return false
       }
     } else {
       if (startJ - 1 >= 0) {
         if( field(startI)(startJ - 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI)(startJ - 1).avaliability == CellState.WORD) return false
         if (startI - 1 >= 0 && (field(startI - 1)(startJ - 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI - 1)(startJ - 1).avaliability == CellState.WORD)) return false
-        if (startI + 1 <= field.length && (field(startI + 1)(startJ - 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI + 1)(startJ - 1).avaliability == CellState.WORD)) return false
+        if (startI + 1 < field.length && (field(startI + 1)(startJ - 1).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI + 1)(startJ - 1).avaliability == CellState.WORD)) return false
       }
       if (startJ + wordLength < field.length) {
         if (field(startI)(startJ + wordLength).avaliability == CellState.FORBIDDEN_DIRECTION || field(startI)(startJ + wordLength).avaliability == CellState.WORD) return  false
         if (startI - 1 >= 0 && !field(startI - 1)(startJ + wordLength).isAvaliabile()) return false
-        if (startI + 1 <= field.length && !field(startI + 1)(startJ + wordLength).isAvaliabile()) return false
+        if (startI + 1 < field.length && !field(startI + 1)(startJ + wordLength).isAvaliabile()) return false
       }
     }
     true
   }
 
-  def setNeighbours(f: Array[Array[Cell]], i: Int, j: Int, direction: Int): Unit = {
+  def setNeighbours(variant:Variant, i: Int, j: Int, direction: Int): Unit = {
     def setVerticalAvaliabilityToNehgbours(x: Int, y: Int) {
-      val c: Cell = f(x)(y)
+      val c: Cell = variant.wordField(x)(y)
       if (c.avaliability != CellState.WORD)
         if (c.avaliability == CellState.HORIZONTAL_DIRECTION) {
           c.avaliability = CellState.FORBIDDEN_DIRECTION
@@ -136,7 +141,7 @@ class CrossWord() {
         }
     }
     def setHorizontalAvaliabilityToNehgbours(x: Int, y: Int) {
-      val c: Cell = f(x)(y)
+      val c: Cell = variant.wordField(x)(y)
       if (c.avaliability != CellState.WORD)
         if (c.avaliability == CellState.VERTICAL_DIRECTION) {
           c.avaliability = CellState.FORBIDDEN_DIRECTION
@@ -147,31 +152,31 @@ class CrossWord() {
 
     if (direction == CellState.HORIZONTAL_DIRECTION) {
       if (i - 1 >= 0) setVerticalAvaliabilityToNehgbours(i - 1, j)
-      if (i + 1 < f.length) setVerticalAvaliabilityToNehgbours(i + 1, j)
+      if (i + 1 < variant.wordField.length) setVerticalAvaliabilityToNehgbours(i + 1, j)
     } else {
       if (j - 1 >= 0) setHorizontalAvaliabilityToNehgbours(i, j - 1)
-      if (j + 1 < f.length) setHorizontalAvaliabilityToNehgbours(i, j + 1)
+      if (j + 1 < variant.wordField.length) setHorizontalAvaliabilityToNehgbours(i, j + 1)
     }
   }
 
-  def setWord(f: Array[Array[Cell]], word: String): List[Array[Array[Cell]]] = {
-    var result:List[Array[Array[Cell]]] = Nil
-    for (i <- 0 until f.length) {
-      for (j <- 0 until f.length) {
-        val cell: Cell = f(i)(j)
+  def setWord(variant: Variant, word: String): List[Variant] = {
+    var result:List[Variant] = Nil
+    for (i <- 0 until variant.length) {
+      for (j <- 0 until variant.length) {
+        val cell: Cell = variant.wordField(i)(j)
         if (cell.avaliability == CellState.WORD) {
           if (word.contains(cell.char)) {
             val index: Int = word.indexOf(cell.char)
             if (cell.wordDirection == CellState.HORIZONTAL_DIRECTION) {
               val startPos: Int = i - index
-              if (checkAvaliability(f, startPos, j, word, CellState.VERTICAL_DIRECTION)) {
-                val clone = placeTheWord(cloneArray(f), startPos, j, word, CellState.VERTICAL_DIRECTION)
+              if (checkAvaliability(variant.wordField, startPos, j, word, CellState.VERTICAL_DIRECTION)) {
+                val clone = placeTheWord(variant.clone(), startPos, j, word, CellState.VERTICAL_DIRECTION)
                 result = List(clone) ::: result
               }
             } else {
               val startPos: Int = j - index
-              if (checkAvaliability(f, startPos, i, word, CellState.HORIZONTAL_DIRECTION)) {
-                val clone: Array[Array[Cell]] = placeTheWord(cloneArray(f), i, startPos, word, CellState.HORIZONTAL_DIRECTION)
+              if (checkAvaliability(variant.wordField, startPos, i, word, CellState.HORIZONTAL_DIRECTION)) {
+                val clone: Variant = placeTheWord(variant.clone(), i, startPos, word, CellState.HORIZONTAL_DIRECTION)
                 result = List(clone) ::: result
               }
             }
@@ -179,7 +184,7 @@ class CrossWord() {
         }
       }
     }
-    result
+    if (result.isEmpty) List(variant) else result
   }
 
 
